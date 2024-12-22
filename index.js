@@ -22,10 +22,20 @@ const client = new MongoClient(uri, {
     }
 });
 
+const volunteersDB = client.db("volunteersDB").collection('volunteers')
+
 async function run() {
     try {
-        app.get('/', (req, res) => {
-            res.send("Server running on!")
+        app.get('/volunteers',async (req, res) => {
+            const volunteersData = volunteersDB.find().sort({date: 1}).limit(6)
+            const result = await volunteersData.toArray()
+            res.send(result)
+        })
+
+        app.post('/addVolunteers',async (req,res)=>{
+            const volunteers = req.body
+            const result = await volunteersDB.insertOne(volunteers)
+            res.send(result)
         })
         
         app.listen(port, () => {
