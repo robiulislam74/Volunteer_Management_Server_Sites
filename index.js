@@ -32,6 +32,12 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/AllVolunteers',async (req, res) => {
+            const volunteersData = volunteersDB.find()
+            const result = await volunteersData.toArray()
+            res.send(result)
+        })
+
         app.post('/addVolunteers',async (req,res)=>{
             const volunteers = req.body
             const result = await volunteersDB.insertOne(volunteers)
