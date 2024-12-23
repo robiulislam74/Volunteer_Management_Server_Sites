@@ -2,7 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const app = express()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
 app.use(cors())
@@ -23,6 +23,7 @@ const client = new MongoClient(uri, {
 });
 
 const volunteersDB = client.db("volunteersDB").collection('volunteers')
+const requestVolunteersDB = client.db("volunteersDB").collection('requestVolunteers')
 
 async function run() {
     try {
@@ -38,9 +39,22 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/volunteerDetails/:id',async (req, res) => {
+            const id = req.params.id
+            const query = {_id: new ObjectId(id)}
+            const volunteersData = await volunteersDB.find(query).toArray()
+            res.send(volunteersData)
+        })
+
         app.post('/addVolunteers',async (req,res)=>{
             const volunteers = req.body
             const result = await volunteersDB.insertOne(volunteers)
+            res.send(result)
+        })
+        
+        app.post('/requestVolunteer',async (req,res)=>{
+            const volunteer = req.body
+            const result = await requestVolunteersDB.insertOne(volunteer)
             res.send(result)
         })
         
