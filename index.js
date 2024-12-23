@@ -27,37 +27,56 @@ const requestVolunteersDB = client.db("volunteersDB").collection('requestVolunte
 
 async function run() {
     try {
-        app.get('/volunteers',async (req, res) => {
-            const volunteersData = volunteersDB.find().sort({date: 1}).limit(6)
+        app.get('/volunteers', async (req, res) => {
+            const volunteersData = volunteersDB.find().sort({ date: 1 }).limit(6)
             const result = await volunteersData.toArray()
             res.send(result)
         })
 
-        app.get('/AllVolunteers',async (req, res) => {
-            const volunteersData = volunteersDB.find()
+        app.get('/AllVolunteers', async (req, res) => {
+            const queryTitle = req.query.title
+            const searchData = {
+                title: { $regex: queryTitle, $options: 'i' }
+            }
+            const volunteersData = volunteersDB.find(searchData)
             const result = await volunteersData.toArray()
+            // search by title
+            // if(queryTitle){
+            //     const searchData = await volunteersDB.find({
+            //         title:{$regex: queryTitle, $options: 'i'}
+            //     }).toArray()
+            //     res.status(200).send(searchData)
+            // }
             res.send(result)
         })
 
-        app.get('/volunteerDetails/:id',async (req, res) => {
+        app.get('/volunteerDetails/:id', async (req, res) => {
             const id = req.params.id
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const volunteersData = await volunteersDB.find(query).toArray()
             res.send(volunteersData)
         })
 
-        app.post('/addVolunteers',async (req,res)=>{
+        app.post('/addVolunteers', async (req, res) => {
             const volunteers = req.body
             const result = await volunteersDB.insertOne(volunteers)
             res.send(result)
         })
-        
-        app.post('/requestVolunteer',async (req,res)=>{
+
+        app.post('/requestVolunteer', async (req, res) => {
             const volunteer = req.body
             const result = await requestVolunteersDB.insertOne(volunteer)
+
+            // update volunteersNeeded field 
+            const id = req.query.id
+            const filter = { _id: new ObjectId(id) }
+            const updateVolunteerNeedNo = {
+                $inc: { volunteersNeeded: -1 }
+            }
+            const findingVolunteer = await volunteersDB.updateOne(filter, updateVolunteerNeedNo)
             res.send(result)
         })
-        
+
         app.listen(port, () => {
             console.log(`Server running on port:`, port)
         })
