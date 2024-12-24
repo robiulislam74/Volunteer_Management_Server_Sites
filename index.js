@@ -71,6 +71,17 @@ async function run() {
             res.send(volunteersData)
         })
 
+        app.get('/manageMyRequest',async (req,res)=>{
+            const volunteer_name = req.query.name
+            const volunteer_email = req.query.email
+            const query = {
+                volunteer_name,
+                volunteer_email
+            }
+            const result = await requestVolunteersDB.find(query).toArray()
+            res.send(result)
+        })
+
         app.patch('/manageMyPost/update/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
@@ -93,6 +104,17 @@ async function run() {
             const id = req.params.id
             const query = {_id: new ObjectId(id)}
             const deleteFind = await volunteersDB.deleteOne(query)
+            res.send(deleteFind)
+        })
+
+        app.delete('/manageMyRequest',async(req,res)=>{
+            const volunteer_name = req.query.name
+            const volunteer_email = req.query.email
+            const query = {
+                volunteer_name,
+                volunteer_email
+            }
+            const deleteFind = await requestVolunteersDB.deleteOne(query)
             res.send(deleteFind)
         })
 
