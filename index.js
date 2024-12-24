@@ -50,11 +50,50 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/manageMyPost', async (req, res) => {
+            const email = req.query.email
+            const query = { organizer_email: email }
+            const result = await volunteersDB.find(query).toArray()
+            res.send(result)
+        })
+
+        app.get('/manageMyPost/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await volunteersDB.find(query).toArray()
+            res.send(result)
+        })
+
         app.get('/volunteerDetails/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: new ObjectId(id) }
             const volunteersData = await volunteersDB.find(query).toArray()
             res.send(volunteersData)
+        })
+
+        app.patch('/manageMyPost/update/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    thumbnail: req.body.thumbnail,
+                    title: req.body.title,
+                    description: req.body.description,
+                    category: req.body.category,
+                    location: req.body.location,
+                    date: req.body.date,
+                    volunteersNeeded: req.body.volunteersNeeded,
+                }
+            }
+            const result = await volunteersDB.updateOne(query,updateDoc)
+            res.send(result)
+        })
+
+        app.delete('/manageMyPost/:id',async(req,res)=>{
+            const id = req.params.id
+            const query = {_id: new ObjectId(id)}
+            const deleteFind = await volunteersDB.deleteOne(query)
+            res.send(deleteFind)
         })
 
         app.post('/addVolunteers', async (req, res) => {
