@@ -2,11 +2,31 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const app = express()
+const jwt = require('jsonwebtoken')
+const cookeParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
-app.use(cors())
+app.use(cors({
+    origin: ["http://localhost:5173"],
+    credentials: true
+}))
 app.use(express.json())
+app.use(cookeParser())
+
+// JWT verify Token
+const verifyToken = (req,res,next)=>{
+    const token = req.cookies?.token
+    if(!token){
+        return res.status(401).send({message:"unAuthorized Access!"})
+    }
+    jwt.verify(token, process.env.Api_Secret_Key, (err,decoded)=>{
+        if(err){
+            return res.status(401).send({message:"unAuthorized Access!"})
+        }
+        next()
+    })
+}
 
 // volunteer_management_system
 // N9bJSJsQT58sTQ08
@@ -50,7 +70,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/manageMyPost', async (req, res) => {
+        app.get('/manageMyPost',verifyToken, async(req, res) => {
             const email = req.query.email
             const query = { organizer_email: email }
             const result = await volunteersDB.find(query).toArray()
@@ -71,7 +91,7 @@ async function run() {
             res.send(volunteersData)
         })
 
-        app.get('/manageMyRequest',async (req,res)=>{
+        app.get('/manageMyRequest',verifyToken, async (req,res)=>{
             const volunteer_name = req.query.name
             const volunteer_email = req.query.email
             const query = {
@@ -136,6 +156,23 @@ async function run() {
             }
             const findingVolunteer = await volunteersDB.updateOne(filter, updateVolunteerNeedNo)
             res.send(result)
+        })
+
+        // JWT Implement Here
+        app.post('/jwt',(req,res)=>{
+            const email = req.body
+            const token = jwt.sign(email,process.env.Api_Secret_Key,{expiresIn:"5h"})
+            res.cookie('token',token,{
+                httpOnly:true,
+                secure:false
+            }).send({success:true})
+        })
+        // logout Clear cookie
+        app.post('/logOut',(req,res)=>{
+            res.clearCookie('token',{
+                httpOnly: true,
+                secure:false
+            }).send({success:true})
         })
 
         app.listen(port, () => {
