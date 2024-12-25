@@ -20,7 +20,7 @@ const verifyToken = (req,res,next)=>{
     if(!token){
         return res.status(401).send({message:"unAuthorized Access!"})
     }
-    jwt.verify(token, process.env.Api_Secret_Key, (err,decoded)=>{
+    jwt.verify(token, process.env.API_SECRET_KEY, (err,decoded)=>{
         if(err){
             return res.status(401).send({message:"unAuthorized Access!"})
         }
@@ -161,7 +161,7 @@ async function run() {
         // JWT Implement Here
         app.post('/jwt',(req,res)=>{
             const email = req.body
-            const token = jwt.sign(email,process.env.Api_Secret_Key,{expiresIn:"5h"})
+            const token = jwt.sign(email,process.env.API_SECRET_KEY,{expiresIn:"5h"})
             res.cookie('token',token,{
                 httpOnly:true,
                 secure:false
