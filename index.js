@@ -8,7 +8,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
 app.use(cors({
-    origin: ["http://localhost:5173"],
+    origin: ["https://volunteer-management-server-sites.vercel.app"],
     credentials: true
 }))
 app.use(express.json())
