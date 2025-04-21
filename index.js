@@ -8,21 +8,25 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 
 app.use(cors({
-    origin: ["https://coffees-crud-task.web.app"],
+    origin: [
+        'http://localhost:5173',
+        'https://coffees-crud-task.web.app',
+        'https://coffees-crud-task.firebaseapp.com'
+    ],
     credentials: true
 }))
 app.use(express.json())
 app.use(cookeParser())
 
 // JWT verify Token
-const verifyToken = (req,res,next)=>{
+const verifyToken = (req, res, next) => {
     const token = req.cookies?.token
-    if(!token){
-        return res.status(401).send({message:"unAuthorized Access!"})
+    if (!token) {
+        return res.status(401).send({ message: "unAuthorized Access!" })
     }
-    jwt.verify(token, process.env.API_SECRET_KEY, (err,decoded)=>{
-        if(err){
-            return res.status(401).send({message:"unAuthorized Access!"})
+    jwt.verify(token, process.env.API_SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: "unAuthorized Access!" })
         }
         next()
     })
@@ -48,7 +52,7 @@ const requestVolunteersDB = client.db("volunteersDB").collection('requestVolunte
 async function run() {
     try {
         app.get('/volunteers', async (req, res) => {
-            const volunteersData = volunteersDB.find().sort({ date: 1 }).limit(6)
+            const volunteersData = volunteersDB.find().sort({ date:1 }).limit(6)
             const result = await volunteersData.toArray()
             res.send(result)
         })
@@ -70,7 +74,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/manageMyPost',verifyToken, async(req, res) => {
+        app.get('/manageMyPost', verifyToken, async (req, res) => {
             const email = req.query.email
             const query = { organizer_email: email }
             const result = await volunteersDB.find(query).toArray()
@@ -91,7 +95,7 @@ async function run() {
             res.send(volunteersData)
         })
 
-        app.get('/manageMyRequest',verifyToken, async (req,res)=>{
+        app.get('/manageMyRequest', verifyToken, async (req, res) => {
             const volunteer_name = req.query.name
             const volunteer_email = req.query.email
             const query = {
@@ -116,18 +120,18 @@ async function run() {
                     volunteersNeeded: req.body.volunteersNeeded,
                 }
             }
-            const result = await volunteersDB.updateOne(query,updateDoc)
+            const result = await volunteersDB.updateOne(query, updateDoc)
             res.send(result)
         })
 
-        app.delete('/manageMyPost/:id',async(req,res)=>{
+        app.delete('/manageMyPost/:id', async (req, res) => {
             const id = req.params.id
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const deleteFind = await volunteersDB.deleteOne(query)
             res.send(deleteFind)
         })
 
-        app.delete('/manageMyRequest',async(req,res)=>{
+        app.delete('/manageMyRequest', async (req, res) => {
             const volunteer_name = req.query.name
             const volunteer_email = req.query.email
             const query = {
@@ -155,24 +159,26 @@ async function run() {
                 $inc: { volunteersNeeded: -1 }
             }
             const findingVolunteer = await volunteersDB.updateOne(filter, updateVolunteerNeedNo)
-            res.send(result)
+            res.send({result})
         })
 
         // JWT Implement Here
-        app.post('/jwt',(req,res)=>{
+        app.post('/jwt', (req, res) => {
             const email = req.body
-            const token = jwt.sign(email,process.env.API_SECRET_KEY,{expiresIn:"5h"})
-            res.cookie('token',token,{
-                httpOnly:true,
-                secure:false
-            }).send({success:true})
+            const token = jwt.sign(email, process.env.API_SECRET_KEY, { expiresIn: "5h" })
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+            }).send({ success: true })
         })
         // logout Clear cookie
-        app.post('/logOut',(req,res)=>{
-            res.clearCookie('token',{
+        app.post('/logOut', (req, res) => {
+            res.clearCookie('token', {
                 httpOnly: true,
-                secure:false
-            }).send({success:true})
+                secure: process.env.NODE_ENV === "production",
+                sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+            }).send({ success: true })
         })
 
         app.listen(port, () => {
